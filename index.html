@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>2048 小游戏</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>2048</h1>
+        </header>
+        <div class="score-panel">
+            <div class="score-box">
+                <span class="score-label">分数</span>
+                <span class="score-value" id="current-score">0</span>
+            </div>
+            <div class="score-box">
+                <span class="score-label">最高分</span>
+                <span class="score-value" id="best-score">0</span>
+            </div>
+            <button class="btn-new-game" id="new-game-btn">新游戏</button>
+        </div>
+        <div class="game-container">
+            <div class="game-board" id="game-board">
+                <div class="cell" data-index="0"></div>
+                <div class="cell" data-index="1"></div>
+                <div class="cell" data-index="2"></div>
+                <div class="cell" data-index="3"></div>
+                <div class="cell" data-index="4"></div>
+                <div class="cell" data-index="5"></div>
+                <div class="cell" data-index="6"></div>
+                <div class="cell" data-index="7"></div>
+                <div class="cell" data-index="8"></div>
+                <div class="cell" data-index="9"></div>
+                <div class="cell" data-index="10"></div>
+                <div class="cell" data-index="11"></div>
+                <div class="cell" data-index="12"></div>
+                <div class="cell" data-index="13"></div>
+                <div class="cell" data-index="14"></div>
+                <div class="cell" data-index="15"></div>
+            </div>
+            <div class="tiles-container" id="tiles-container"></div>
+        </div>
+        <div class="instructions" id="instructions">
+            <p class="desktop-hint">使用方向键 ↑ ↓ ← → 移动方块</p>
+            <p class="mobile-hint">滑动屏幕移动方块</p>
+        </div>
+    </div>
+    <div class="modal" id="win-modal">
+        <div class="modal-content">
+            <h2>恭喜通关！</h2>
+            <p>你达到了 2048！</p>
+            <div class="modal-buttons">
+                <button class="btn-continue" id="continue-btn">继续游戏</button>
+                <button class="btn-restart" id="restart-btn-win">重开一局</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="gameover-modal">
+        <div class="modal-content">
+            <h2>游戏结束</h2>
+            <p>最终得分：<span id="final-score">0</span></p>
+            <div class="modal-buttons">
+                <button class="btn-restart" id="restart-btn-lose">再来一局</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
