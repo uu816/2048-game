@@ -21,6 +21,25 @@
                 <span class="score-value" id="best-score">0</span>
             </div>
             <button class="btn-new-game" id="new-game-btn">新游戏</button>
+            <button class="btn-pause" id="pause-btn">暂停</button>
+            <button class="btn-leaderboard" id="leaderboard-btn">排行榜</button>
+        </div>
+        <div class="settings-panel">
+            <div class="setting-item">
+                <label for="grid-size">网格大小:</label>
+                <select id="grid-size">
+                    <option value="4">4×4</option>
+                    <option value="5">5×5</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <label for="game-speed">游戏速度:</label>
+                <select id="game-speed">
+                    <option value="100">快</option>
+                    <option value="150" selected>正常</option>
+                    <option value="200">慢</option>
+                </select>
+            </div>
         </div>
         <div class="game-container">
             <div class="game-board" id="game-board">
@@ -40,8 +59,23 @@
                 <div class="cell" data-index="13"></div>
                 <div class="cell" data-index="14"></div>
                 <div class="cell" data-index="15"></div>
+                <div class="cell" data-index="16"></div>
+                <div class="cell" data-index="17"></div>
+                <div class="cell" data-index="18"></div>
+                <div class="cell" data-index="19"></div>
+                <div class="cell" data-index="20"></div>
+                <div class="cell" data-index="21"></div>
+                <div class="cell" data-index="22"></div>
+                <div class="cell" data-index="23"></div>
+                <div class="cell" data-index="24"></div>
             </div>
             <div class="tiles-container" id="tiles-container"></div>
+            <div class="pause-overlay" id="pause-overlay">
+                <div class="pause-content">
+                    <h2>游戏已暂停</h2>
+                    <p>按 P 键或点击继续按钮恢复游戏</p>
+                </div>
+            </div>
         </div>
         <div class="instructions" id="instructions">
             <p class="desktop-hint">使用方向键 ↑ ↓ ← → 移动方块</p>
@@ -64,6 +98,22 @@
             <p>最终得分：<span id="final-score">0</span></p>
             <div class="modal-buttons">
                 <button class="btn-restart" id="restart-btn-lose">再来一局</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="leaderboard-modal">
+        <div class="modal-content leaderboard-modal-content">
+            <div class="modal-header">
+                <h2>🏆 排行榜</h2>
+                <button class="btn-close" id="close-leaderboard">×</button>
+            </div>
+            <div class="best-score-section">
+                <span class="best-label">历史最高分</span>
+                <span class="best-value" id="leaderboard-best-score">0</span>
+            </div>
+            <ul id="leaderboard-list" class="leaderboard-list"></ul>
+            <div class="modal-buttons">
+                <button class="btn-close-modal" id="close-leaderboard-btn">关闭</button>
             </div>
         </div>
     </div>

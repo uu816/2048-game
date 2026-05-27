@@ -1,14 +1,18 @@
 /**
- * 2048 游戏核心逻辑
+ * 2048 游戏核心逻辑模块
+ * 包含游戏状态管理、移动逻辑、计分系统等核心功能
  */
 
 const Game = {
-    grid: [],
-    score: 0,
-    bestScore: 0,
-    isAnimating: false,
-    hasWon: false,
-    isGameOver: false,
+    grid: [],              // 游戏网格数据
+    score: 0,              // 当前分数
+    bestScore: 0,          // 最高分（从localStorage读取）
+    gridSize: 4,           // 网格大小（支持4x4, 5x5）
+    animationSpeed: 150,   // 动画速度（毫秒）
+    isAnimating: false,    // 是否正在动画中
+    isPaused: false,       // 是否暂停
+    hasWon: false,         // 是否已获胜
+    isGameOver: false,     // 是否游戏结束
 
     init() {
         this.loadBestScore();
@@ -27,16 +31,34 @@ const Game = {
     },
 
     newGame() {
-        this.grid = Array(4).fill(null).map(() => Array(4).fill(0));
+        this.grid = Array(this.gridSize).fill(null).map(() => Array(this.gridSize).fill(0));
         this.score = 0;
         this.hasWon = false;
         this.isGameOver = false;
         this.isAnimating = false;
+        this.isPaused = false;
         TileManager.clearAllTiles();
         this.hideModals();
+        this.updatePauseButton();
         this.addRandomTile();
         this.addRandomTile();
         this.updateScoreDisplay();
+    },
+
+    togglePause() {
+        this.isPaused = !this.isPaused;
+        this.updatePauseButton();
+    },
+
+    updatePauseButton() {
+        const pauseBtn = document.getElementById('pause-btn');
+        const pauseOverlay = document.getElementById('pause-overlay');
+        if (pauseBtn) {
+            pauseBtn.textContent = this.isPaused ? '继续' : '暂停';
+        }
+        if (pauseOverlay) {
+            pauseOverlay.style.display = this.isPaused ? 'flex' : 'none';
+        }
     },
 
     hideModals() {
@@ -56,8 +78,8 @@ const Game = {
 
     getEmptyCells() {
         const empty = [];
-        for (let r = 0; r < 4; r++) {
-            for (let c = 0; c < 4; c++) {
+        for (let r = 0; r < this.gridSize; r++) {
+            for (let c = 0; c < this.gridSize; c++) {
                 if (this.grid[r][c] === 0) {
                     empty.push({ row: r, col: c });
                 }
@@ -67,7 +89,7 @@ const Game = {
     },
 
     move(direction) {
-        if (this.isAnimating || this.isGameOver) return;
+        if (this.isAnimating || this.isGameOver || this.isPaused) return;
         let moved = false;
         switch (direction) {
             case 'up': moved = this.moveUp(); break;
@@ -82,19 +104,19 @@ const Game = {
                 this.checkWinCondition();
                 if (!this.canMove()) this.gameOver();
                 this.isAnimating = false;
-            }, 150);
+            }, this.animationSpeed);
         }
     },
 
     moveUp() {
         let moved = false;
-        for (let col = 0; col < 4; col++) {
+        for (let col = 0; col < this.gridSize; col++) {
             const column = [];
-            for (let row = 0; row < 4; row++) {
+            for (let row = 0; row < this.gridSize; row++) {
                 if (this.grid[row][col] !== 0) column.push(this.grid[row][col]);
             }
             const merged = this.mergeLine(column);
-            for (let row = 0; row < 4; row++) {
+            for (let row = 0; row < this.gridSize; row++) {
                 const newValue = merged[row] || 0;
                 if (this.grid[row][col] !== newValue) moved = true;
                 this.grid[row][col] = newValue;
@@ -102,7 +124,7 @@ const Game = {
             this.score += this.getMergeScore(merged);
         }
         if (moved) {
-            TileManager.updateTiles(this.grid);
+            TileManager.updateTiles(this.grid, this.gridSize);
             this.updateScoreDisplay();
         }
         return moved;
@@ -110,13 +132,13 @@ const Game = {
 
     moveDown() {
         let moved = false;
-        for (let col = 0; col < 4; col++) {
+        for (let col = 0; col < this.gridSize; col++) {
             const column = [];
-            for (let row = 3; row >= 0; row--) {
+            for (let row = this.gridSize - 1; row >= 0; row--) {
                 if (this.grid[row][col] !== 0) column.push(this.grid[row][col]);
             }
             const merged = this.mergeLine(column);
-            for (let row = 3, i = 0; row >= 0; row--, i++) {
+            for (let row = this.gridSize - 1, i = 0; row >= 0; row--, i++) {
                 const newValue = merged[i] || 0;
                 if (this.grid[row][col] !== newValue) moved = true;
                 this.grid[row][col] = newValue;
@@ -124,7 +146,7 @@ const Game = {
             this.score += this.getMergeScore(merged);
         }
         if (moved) {
-            TileManager.updateTiles(this.grid);
+            TileManager.updateTiles(this.grid, this.gridSize);
             this.updateScoreDisplay();
         }
         return moved;
@@ -132,10 +154,10 @@ const Game = {
 
     moveLeft() {
         let moved = false;
-        for (let row = 0; row < 4; row++) {
+        for (let row = 0; row < this.gridSize; row++) {
             const line = this.grid[row].filter(v => v !== 0);
             const merged = this.mergeLine(line);
-            for (let col = 0; col < 4; col++) {
+            for (let col = 0; col < this.gridSize; col++) {
                 const newValue = merged[col] || 0;
                 if (this.grid[row][col] !== newValue) moved = true;
                 this.grid[row][col] = newValue;
@@ -143,7 +165,7 @@ const Game = {
             this.score += this.getMergeScore(merged);
         }
         if (moved) {
-            TileManager.updateTiles(this.grid);
+            TileManager.updateTiles(this.grid, this.gridSize);
             this.updateScoreDisplay();
         }
         return moved;
@@ -151,13 +173,13 @@ const Game = {
 
     moveRight() {
         let moved = false;
-        for (let row = 0; row < 4; row++) {
+        for (let row = 0; row < this.gridSize; row++) {
             const line = [];
-            for (let col = 3; col >= 0; col--) {
+            for (let col = this.gridSize - 1; col >= 0; col--) {
                 if (this.grid[row][col] !== 0) line.push(this.grid[row][col]);
             }
             const merged = this.mergeLine(line);
-            for (let col = 3, i = 0; col >= 0; col--, i++) {
+            for (let col = this.gridSize - 1, i = 0; col >= 0; col--, i++) {
                 const newValue = merged[i] || 0;
                 if (this.grid[row][col] !== newValue) moved = true;
                 this.grid[row][col] = newValue;
@@ -165,7 +187,7 @@ const Game = {
             this.score += this.getMergeScore(merged);
         }
         if (moved) {
-            TileManager.updateTiles(this.grid);
+            TileManager.updateTiles(this.grid, this.gridSize);
             this.updateScoreDisplay();
         }
         return moved;
@@ -196,8 +218,8 @@ const Game = {
 
     checkWinCondition() {
         if (this.hasWon) return;
-        for (let r = 0; r < 4; r++) {
-            for (let c = 0; c < 4; c++) {
+        for (let r = 0; r < this.gridSize; r++) {
+            for (let c = 0; c < this.gridSize; c++) {
                 if (this.grid[r][c] === 2048) {
                     this.hasWon = true;
                     this.showWinModal();
@@ -213,20 +235,84 @@ const Game = {
 
     canMove() {
         if (this.getEmptyCells().length > 0) return true;
-        for (let r = 0; r < 4; r++) {
-            for (let c = 0; c < 4; c++) {
+        for (let r = 0; r < this.gridSize; r++) {
+            for (let c = 0; c < this.gridSize; c++) {
                 const val = this.grid[r][c];
-                if (c < 3 && this.grid[r][c + 1] === val) return true;
-                if (r < 3 && this.grid[r + 1][c] === val) return true;
+                if (c < this.gridSize - 1 && this.grid[r][c + 1] === val) return true;
+                if (r < this.gridSize - 1 && this.grid[r + 1][c] === val) return true;
             }
         }
         return false;
     },
 
+    setGridSize(size) {
+        if (size !== 4 && size !== 5) return;
+        this.gridSize = size;
+        TileManager.setGridSize(size);
+        this.newGame();
+    },
+
+    setAnimationSpeed(speed) {
+        this.animationSpeed = speed;
+    },
+
     gameOver() {
         this.isGameOver = true;
         document.getElementById('final-score').textContent = this.score;
+        this.saveScoreToLeaderboard();
         document.getElementById('gameover-modal').classList.add('active');
+    },
+
+    saveScoreToLeaderboard() {
+        const leaderboard = this.getLeaderboard();
+        const newRecord = {
+            score: this.score,
+            date: new Date().toLocaleString('zh-CN'),
+            gridSize: this.gridSize,
+            id: Date.now()
+        };
+        leaderboard.push(newRecord);
+        leaderboard.sort((a, b) => b.score - a.score);
+        const topScores = leaderboard.slice(0, 10);
+        localStorage.setItem('2048-leaderboard', JSON.stringify(topScores));
+    },
+
+    getLeaderboard() {
+        const saved = localStorage.getItem('2048-leaderboard');
+        return saved ? JSON.parse(saved) : [];
+    },
+
+    showLeaderboard() {
+        const leaderboard = this.getLeaderboard();
+        const leaderboardModal = document.getElementById('leaderboard-modal');
+        const leaderboardList = document.getElementById('leaderboard-list');
+        const bestScoreEl = document.getElementById('leaderboard-best-score');
+        
+        leaderboardList.innerHTML = '';
+        
+        if (leaderboard.length === 0) {
+            leaderboardList.innerHTML = '<li class="empty-record">暂无游戏记录</li>';
+        } else {
+            bestScoreEl.textContent = leaderboard[0].score;
+            
+            leaderboard.forEach((record, index) => {
+                const li = document.createElement('li');
+                li.className = 'leaderboard-item';
+                li.innerHTML = `
+                    <span class="rank ${index < 3 ? 'top-rank' : ''}">${index + 1}</span>
+                    <span class="record-score">${record.score}</span>
+                    <span class="record-date">${record.date}</span>
+                    <span class="record-grid">${record.gridSize}×${record.gridSize}</span>
+                `;
+                leaderboardList.appendChild(li);
+            });
+        }
+        
+        leaderboardModal.classList.add('active');
+    },
+
+    hideLeaderboard() {
+        document.getElementById('leaderboard-modal').classList.remove('active');
     },
 
     updateScoreDisplay() {
@@ -251,6 +337,10 @@ const Game = {
 
     setupEventListeners() {
         document.addEventListener('keydown', (e) => {
+            if (e.key === 'p' || e.key === 'P') {
+                this.togglePause();
+                return;
+            }
             const keyMap = {
                 'ArrowUp': 'up', 'ArrowDown': 'down', 'ArrowLeft': 'left', 'ArrowRight': 'right',
                 'w': 'up', 'W': 'up', 's': 'down', 'S': 'down', 'a': 'left', 'A': 'left', 'd': 'right', 'D': 'right'
@@ -263,11 +353,28 @@ const Game = {
         });
         this.setupTouchEvent();
         document.getElementById('new-game-btn').addEventListener('click', () => this.newGame());
+        document.getElementById('pause-btn').addEventListener('click', () => this.togglePause());
+        document.getElementById('leaderboard-btn').addEventListener('click', () => this.showLeaderboard());
         document.getElementById('continue-btn').addEventListener('click', () => {
             document.getElementById('win-modal').classList.remove('active');
         });
         document.getElementById('restart-btn-win').addEventListener('click', () => this.newGame());
         document.getElementById('restart-btn-lose').addEventListener('click', () => this.newGame());
+        document.getElementById('close-leaderboard').addEventListener('click', () => this.hideLeaderboard());
+        document.getElementById('close-leaderboard-btn').addEventListener('click', () => this.hideLeaderboard());
+        
+        const gridSizeSelect = document.getElementById('grid-size');
+        const speedSelect = document.getElementById('game-speed');
+        if (gridSizeSelect) {
+            gridSizeSelect.addEventListener('change', (e) => {
+                this.setGridSize(parseInt(e.target.value));
+            });
+        }
+        if (speedSelect) {
+            speedSelect.addEventListener('change', (e) => {
+                this.setAnimationSpeed(parseInt(e.target.value));
+            });
+        }
     },
 
     setupTouchEvent() {
@@ -298,9 +405,34 @@ const Game = {
 const TileManager = {
     container: null,
     tiles: [],
+    gridSize: 4,           // 网格大小
+    gap: 12,               // 单元格间距
 
     init() {
         this.container = document.getElementById('tiles-container');
+    },
+
+    setGridSize(size) {
+        this.gridSize = size;
+        this.gap = size === 4 ? 12 : 8;
+        this.updateBoardStyle();
+    },
+
+    updateBoardStyle() {
+        const gameBoard = document.getElementById('game-board');
+        if (gameBoard) {
+            gameBoard.style.gridTemplateColumns = `repeat(${this.gridSize}, 1fr)`;
+            gameBoard.style.gridTemplateRows = `repeat(${this.gridSize}, 1fr)`;
+            gameBoard.style.gap = `${this.gap}px`;
+            gameBoard.style.padding = `${this.gap}px`;
+        }
+        const tilesContainer = document.getElementById('tiles-container');
+        if (tilesContainer) {
+            tilesContainer.style.top = `${this.gap}px`;
+            tilesContainer.style.left = `${this.gap}px`;
+            tilesContainer.style.right = `${this.gap}px`;
+            tilesContainer.style.bottom = `${this.gap}px`;
+        }
     },
 
     createTile(row, col, value, isNew = false) {
@@ -318,19 +450,35 @@ const TileManager = {
     },
 
     setTilePosition(tile, row, col) {
-        const gap = 12;
-        const totalGap = gap * 3;
-        const cellWidth = `calc((100% - ${totalGap}px) / 4)`;
-        const cellHeight = `calc((100% - ${totalGap}px) / 4)`;
-        tile.style.left = `calc(${col} * (${cellWidth} + ${gap}px))`;
-        tile.style.top = `calc(${row} * (${cellHeight} + ${gap}px))`;
+        const totalGap = this.gap * (this.gridSize - 1);
+        const cellWidth = `calc((100% - ${totalGap}px) / ${this.gridSize})`;
+        const cellHeight = `calc((100% - ${totalGap}px) / ${this.gridSize})`;
+        tile.style.left = `calc(${col} * (${cellWidth} + ${this.gap}px))`;
+        tile.style.top = `calc(${row} * (${cellHeight} + ${this.gap}px))`;
+        tile.style.width = cellWidth;
+        tile.style.height = cellHeight;
+        
+        const fontSize = this.gridSize === 4 ? 
+            (value >= 1024 ? '40px' : value >= 128 ? '45px' : '48px') :
+            (value >= 1024 ? '28px' : value >= 128 ? '32px' : '36px');
+        tile.style.fontSize = fontSize;
     },
 
-    updateTiles(grid) {
+    updateTiles(grid, size = 4) {
+        this.gridSize = size;
+        this.gap = size === 4 ? 12 : 8;
+        this.updateBoardStyle();
         this.clearAllTiles();
-        for (let r = 0; r < 4; r++) {
-            for (let c = 0; c < 4; c++) {
-                if (grid[r][c] !== 0) this.createTile(r, c, grid[r][c], false);
+        for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+                if (grid[r][c] !== 0) {
+                    const tile = this.createTile(r, c, grid[r][c], false);
+                    const value = grid[r][c];
+                    const fontSize = size === 4 ? 
+                        (value >= 1024 ? '40px' : value >= 128 ? '45px' : value >= 16 ? '47px' : '48px') :
+                        (value >= 1024 ? '24px' : value >= 128 ? '28px' : value >= 16 ? '30px' : '32px');
+                    tile.style.fontSize = fontSize;
+                }
             }
         }
     },
